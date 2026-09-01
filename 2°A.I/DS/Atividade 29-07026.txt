@@ -1,0 +1,4 @@
+Dados os valores de A B e C, faça um programa que calcule o valor de delta e as raizes da equação do segundo grau(bhaskara).
+Considere todas as restrições para efetuar estes calculos. Crie funções e procedimentos que resolva cada problema separadamente.
+
+Restrições: A for igual 0 nao tem conta; Delta for negativo nao tem conta

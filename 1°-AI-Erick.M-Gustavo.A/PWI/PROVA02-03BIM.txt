@@ -1,0 +1,24 @@
+1. Utilizando HTML, CSS e JS, solicite ao usuário dois valores inteiros positivos, um valor inicial e um valor final
+
+2. Usar uma estrutura de repetição 'for' paa iterar por todos os números do intervalo definido, do valor inicial ao valor final
+
+3. Para cada número do intervalo, verificar se é divisível por 3, por 5  ou por ambos
+
+4. Exibir o resultado apropriado para cada número
+	4.1  Exibir 'Woody', se o número for divisível por 3
+	4.2  Exibir 'Buzz',  se o número for divisível por 5
+	4.3  Exibir 'Hello World', se o número for divisível por ambos
+	4.4  Caso contrário imprimir o próprio número
+	4.5  As informações acima, devem ser exibidas abaixo do formulário
+
+Critério de avaliação
+
+  I - se a dupla criou apenas o formulário
+  R - se a dpula criou apenas o formulário e a estrutura de repetição, exibindo os valores de início e fim
+  B - se a dpula criou apenas o formulário e a estrutura de repetição, exibindo os valores de início e fim;
+      exibiu os textos 'Woody' e 'Buzz'
+ MB - se a dpula crimpriu TODOS os requisitos
+
+Atividade Avaliativa para ser desenvolvida em DUPLA e ser entregue hoje, 05/09/2024 até as 15h15min
+
+Atividade com consulta AO SEU MATERIAL!

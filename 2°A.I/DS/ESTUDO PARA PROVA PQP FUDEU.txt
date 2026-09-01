@@ -1,0 +1,80 @@
+# ==========================================
+# EXEMPLOS PRÁTICOS DE DICIONÁRIOS EM PYTHON
+# ==========================================
+
+# 1. CRIAÇÃO E ACESSO
+# Dicionário guarda chave: valor
+aluno = {"nome": "Carlos", "idade": 20, "curso": "Ciência da Computação"}
+
+print(aluno["nome"])  # Acessa o valor pela chave -> Saída: Carlos
+print(aluno.get("idade"))  # Outra forma de acessar -> Saída: 20
+
+
+# 2. ADICIONAR E MODIFICAR (Mesma sintaxe)
+# Se a chave não existe, ele cria. Se já existe, ele sobrescreve o valor.
+aluno["idade"] = 21  # Modifica a idade existente
+aluno["nota"] = 9.5  # Cria uma nova chave com valor
+
+print(aluno)
+
+
+# 3. VERIFICAR SE EXISTE (Operador 'in')
+# Sempre verifique antes de buscar para evitar erro (KeyError)
+if "curso" in aluno:
+    print("A chave curso existe!")
+
+if "professor" not in aluno:
+    print("A chave professor não existe.")
+
+
+# 4. REMOÇÃO DE ELEMENTOS
+# Jeito 1: Usando 'del'
+del aluno["nota"]
+
+# Jeito 2: Usando '.pop()' (remove e retorna o valor)
+curso_removido = aluno.pop("curso")
+print(curso_removido)  # Saída: Ciência da Computação
+
+
+# 5. PERCORRENDO O DICIONÁRIO (Loops)
+
+dados_produto = {"produto": "Teclado", "preco": 150.0, "estoque": 30}
+
+# Percorrer apenas as Chaves
+print("\n--- Chaves ---")
+for chave in dados_produto:  # ou for chave in dados_produto.keys():
+    print(chave)
+
+# Percorrer apenas os Valores
+print("\n--- Valores ---")
+for valor in dados_produto.values():
+    print(valor)
+
+# Percorrer Chave e Valor juntos (.items()) -> MUITO USADO EM PROVA
+print("\n--- Chaves e Valores ---")
+for chave, valor in dados_produto.items():
+    print(f"{chave}: {valor}")
+
+
+# 6. TRATAMENTO DE ERRO BÁSICO (Try / Except)
+# Essencial para entradas do usuário (evita crash se digitar texto em vez de número)
+try:
+    idade_usuario = int(input("\nDigite sua idade: "))
+    print(f"Idade aceita: {idade_usuario}")
+except ValueError:
+    print("Erro: Você digitou algo que não é um número inteiro!")
+
+estoque = {}
+
+# Pede quantos itens vai cadastrar (convertendo para inteiro)
+total = int(input("Digite quantos produtos deseja cadastrar: "))
+
+for i in range(total):
+    print(f"\n--- Produto {i + 1} ---")
+    produto = input("Nome do produto: ")
+    quantidade = input("Quantidade: ")
+
+    # Salva no dicionário
+    estoque[produto] = quantidade
+
+print("\nEstoque final:", estoque)
