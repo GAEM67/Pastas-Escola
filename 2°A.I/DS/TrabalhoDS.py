@@ -75,26 +75,95 @@ while True:
                 input("Pressione algo para continuar...")
        
         case 3:
-            if dict == None:
+            if not dict:
                 print("Dicionário vazio!")
+                input("Pressione algo para continuar...")
                 continue
-            else:
-                num = 0
-                tamanho_total = 13
-                print("Keys:")
-                for k, v in dict.items():
-                    num += 1
-                    print(f"{num} - {k}: {v}")
-                escolha3 = int(input("Número da chave: "))
 
-                if escolha3 == num:
-                    mod_value = input("Novo valor: ")
-                    v = mod_value
-                    dict[k] = mod_value
-                print("----- Conteúdo do dicionário")
-                for k,v in dict.items():
+            num = 0
+            tamanho_total = 13
+            print("Keys:")
+            for k, v in dict.items():
+                num += 1
+                print(f"{num} - {k}: {v}")
+
+            escolha3 = int(input("Número da chave: "))
+
+            if 1 <= escolha3 <= num:
+                num_atual = 0
+                for k, v in dict.items():
+                    num_atual += 1
+                    if num_atual == escolha3:
+                        mod_value = input("Novo valor: ")
+                        dict[k] = mod_value
+                        break
+            else:
+                print(f">>>>> '{escolha3}' é um número de chave inválido!")
+                input("Pressione algo para continuar...")
+                continue
+            print("----Conteúdo do dicionário")
+            for k, v in dict.items():
+                qtd_pontos = tamanho_total - len(k)
+                pontos = "." * qtd_pontos
+                print(f"{k}{pontos}: {v}")
+
+            print("-" * 27)
+            input("Pressione algo para continuar...")
+
+        case 4:
+            if not dict:
+                print("Dicionário vazio!")
+                input("Pressione algo para continuar...")
+                continue
+            
+            num = 0
+            tamanho_total = 13
+            print("Keys:")
+            for k, v in dict.items():
+                num += 1
+                print(f"{num} - {k}: {v}")
+            
+            escolha3 = int(input("Número da chave: "))
+            
+            if 1 <= escolha3 <= num:
+                num_atual = 0
+                for k, v in dict.items():
+                    num_atual += 1
+                    if num_atual == escolha3:
+                        del dict[k]
+                        break
+            else:
+                print(f">>>>> '{escolha3}' é um número de chave inválido!")
+                input("Pressione algo para continuar...")
+                continue
+
+            if not dict:
+                print(">>>>> Dicionário esvaziado!")
+
+            else:
+                for k, v in dict.items():
                     qtd_pontos = tamanho_total - len(k)
                     pontos = "." * qtd_pontos
-                    print(f"{k}{pontos}: {v}")                    
-                print("-" * 28)
+                    print(f"{k}{pontos}: {v}")
+
+                print("-" * 27)
+                input("Pressione algo para continuar...")
+
+        case 5:
+            tamanho_total = 0
+            if not dict:
+                print("""
+---- Conteúdo do dicionário
+          VAZIO!
+---------------------------
+                """)
                 
+            else:
+                print("----Conteúdo do dicionário")
+                for k, v in dict.items():
+                    qtd_pontos = tamanho_total - len(k)
+                    pontos = "." * qtd_pontos
+                    print(f"{k}{pontos}: {v}")
+                
+                print("---------------------------")
+                input("Pressione algo para continuar...")
