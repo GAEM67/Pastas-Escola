@@ -126,9 +126,97 @@ INSERT INTO pedidos (id_pedido, id_cliente, data_pedido, valor) VALUES
 (2, 1, '2026-09-03', 500.00),
 (3, 2, '2026-09-05', 800.00);
 
+-- 1.
 SELECT c.nome 
 FROM clientes c 
 WHERE c.id_cliente IN (
     SELECT p.id_cliente 
     FROM pedidos p
+);
+
+-- 2.
+SELECT c.nome
+FROM clientes c
+WHERE c.id_cliente NOT IN (
+    SELECT p.id_cliente
+    FROM pedidos p
+);
+
+-- 3.
+SELECT id_pedido, id_cliente, valor
+FROM pedidos
+WHERE valor > (
+    SELECT AVG(valor)
+    FROM pedidos
+);
+
+-- 4.
+SELECT c.nome
+FROM clientes c
+WHERE c.id_cliente IN (
+    SELECT p.id_cliente
+    FROM pedidos p
+    WHERE p.valor > 1000
+);
+
+-- 5.
+SELECT nome, preco
+FROM produtos
+WHERE preco = (
+    SELECT MAX(preco)
+    FROM produtos
+);
+
+-- 6. 
+SELECT nome, preco
+FROM produtos
+WHERE preco > (
+    SELECT AVG(preco)
+    FROM produtos
+);
+
+-- 7.
+SELECT nome
+FROM produtos
+WHERE id_categoria = (
+    SELECT id_categoria
+    FROM categorias
+    WHERE nome_categoria = 'Eletrônicos'
+);
+
+-- 8. 
+SELECT SUM(valor) AS total_gasto
+FROM pedidos
+WHERE id_cliente = (
+    SELECT id_cliente
+    FROM clientes
+    WHERE nome = 'Carlos'
+);
+
+-- 9.
+SELECT c.nome, SUM(p.valor) AS total_gasto
+FROM clientes c
+INNER JOIN pedidos p
+    ON c.id_cliente = p.id_cliente
+GROUP BY c.id_cliente, c.nome
+HAVING SUM(p.valor) > (
+    SELECT SUM(valor)
+    FROM pedidos
+    WHERE id_cliente = (
+        SELECT id_cliente
+        FROM clientes
+        WHERE nome = 'Maria'
+    )
+);
+
+-- 10.
+SELECT nome
+FROM clientes
+WHERE id_cliente = (
+    SELECT id_cliente
+    FROM pedidos
+    WHERE valor = (
+        SELECT MAX(valor)
+        FROM pedidos
+    )
 );
