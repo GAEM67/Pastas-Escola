@@ -1,5 +1,5 @@
 -- set - quak eu quero alterar, where- onde eu quer altrerar
-
+drop database nosso_sistema;
 create database nosso_sistema;
 use nosso_sistema;
 
@@ -13,7 +13,12 @@ create table Cliente(
 	uf char(2),
 	ie char(12)
 );
-
+create table Vendedor(
+	cod_ven numeric(4) primary key,
+	salario_fixo numeric(10,2),
+	comissao char(1),
+	nome_ven varchar(20) not null
+);
 
 create table Pedido(
 	num_pedido numeric(4) primary key,
@@ -22,14 +27,6 @@ create table Pedido(
 	cod_ven numeric(4) references Vendedor
 );
 select * from Vendedor;
-
-create table Vendedor(
-	cod_ven numeric(4) primary key,
-	salario_fixo numeric(10,2),
-	comissao char(1),
-	nome_ven varchar(20) not null
-);
-
 
 create table Produto(
 	cod_prod numeric(4) primary key,
@@ -179,4 +176,36 @@ select * from Item_pedido where cod_prod = 77 or cod_prod = 53 or cod_prod = 31 
 -- 24.  Quais vendedores possuem a penúltima letra do nome a letra "i"?
 -- 25. Exibe o nome dos clientes que possuam as letras “o” e “e” em seu nome.
 
-
+-- Mostre o pedido (número) e a descrição dos produtos que ele tem.
+select itp.num_pedido, p.descricao
+from item_pedido itp
+inner join produto p on itp.cod_prod = p.cod_prod
+order by itp.num_pedido;
+-- Crie um relatório que mostre os produtos comprados por cada cliente.
+select c.nome_clie,p.descricao from Cliente c
+inner join Pedido pe on c.cod_clie = pe.cod_clie
+inner join Item_pedido itp on pe.num_pedido = itp.num_pedido
+inner join Produto p on itp.cod_prod = p.cod_prod
+order by c.nome_clie; 
+-- Crie um relatório que mostre os produtos vendidos por cada vendedor.
+select v.nome_ven, p.descricao
+from Vendedor v
+inner join Pedido pe on v.cod_ven = pe.cod_ven
+inner join Item_pedido itp on pe.num_pedido = itp.num_pedido
+inner join Produto p on itp.cod_prod = p.cod_prod;
+-- Qual cliente comprou chocolate?
+select distinct c.nome_clie
+from Cliente c
+inner join Pedido pe on c.cod_clie = pe.cod_clie
+inner join Item_pedido itp on pe.num_pedido = itp.num_pedido
+inner join Produto p on itp.cod_prod = p.cod_prod
+where p.descricao = 'Chocolate';
+-- Qual vendedor vendeu mais chocolate?
+select v.nome_ven, sum(itp.quant) as quantidade_chocolate
+from Vendedor v
+inner join Pedido pe on v.cod_ven = pe.cod_ven
+inner join Item_pedido itp on pe.num_pedido = itp.num_pedido
+inner join Produto p on itp.cod_prod = p.cod_prod
+where p.descricao = 'Chocolate'
+group by v.nome_ven
+order by quantidade_chocolate desc;
