@@ -201,11 +201,31 @@ inner join Item_pedido itp on pe.num_pedido = itp.num_pedido
 inner join Produto p on itp.cod_prod = p.cod_prod
 where p.descricao = 'Chocolate';
 -- Qual vendedor vendeu mais chocolate?
-select v.nome_ven, sum(itp.quant) as quantidade_chocolate
-from Vendedor v
-inner join Pedido pe on v.cod_ven = pe.cod_ven
-inner join Item_pedido itp on pe.num_pedido = itp.num_pedido
-inner join Produto p on itp.cod_prod = p.cod_prod
-where p.descricao = 'Chocolate'
-group by v.nome_ven
-order by quantidade_chocolate desc;
+select v.nome_ven, sum(itp.quant) as quantidade_chocolate from Vendedor v
+	inner join Pedido pe on v.cod_ven = pe.cod_ven
+	inner join Item_pedido itp on pe.num_pedido = itp.num_pedido
+	inner join Produto p on itp.cod_prod = p.cod_prod
+	where p.descricao = 'Chocolate'
+	group by v.nome_ven
+	order by quantidade_chocolate desc;
+
+-- 1 - Mostre os clientes e seus pedidos, exiba o nome do cliente com o número do pedido.
+select c.nome_clie, p.num_pedido from Cliente c inner join Pedido p on c.cod_clie = p.cod_clie;
+-- 2 - Mostre os vendedores e seus pedidos, exiba o nome do vendedor com o número do pedido.
+select v.nome_ven, p.num_pedido from Vendedor v inner join Pedido p on v.cod_ven = p.cod_ven;
+-- 3 - Mostre o nome do cliente, o número do pedido e o nome do vendedor que gerou o pedido.
+select c.nome_clie, p.num_pedido, v.nome_ven from Cliente c inner join Pedido p on c.cod_clie = p.cod_clie inner join Vendedor v on v.cod_ven = p.cod_ven; 
+-- 4 - Mostre o número do pedido e os produtos descrição que estão neste pedido.
+select p.num_pedido, pr.descricao from Pedido p inner join Item_pedido i on i.num_pedido = p.num_pedido inner join Produto pr on pr.cod_prod = i.cod_prod;
+-- 5 - Mostre os produtos que cada cliente comprou, agrupando pelo nome do cliente.
+select c.nome_clie, pr.descricao from Cliente c 
+	inner join Pedido p on c.cod_clie = p.cod_clie 
+	inner join Item_pedido i on i.num_pedido = p.num_pedido 
+	inner join Produto pr on pr.cod_prod = i.cod_prod 
+	Group by nome_clie, descricao;
+-- 6 - Quem são os cliente que compraram chocolate, mostre o nome do cliente e a descrição do produto?
+select distinct c.nome_clie, pr.descricao from Cliente c
+	inner join Pedido p on c.cod_clie = p.cod_clie
+	inner join Item_pedido itp on p.num_pedido = itp.num_pedido
+	inner join Produto pr on itp.cod_prod = pr.cod_prod
+	where pr.descricao = 'Chocolate';
