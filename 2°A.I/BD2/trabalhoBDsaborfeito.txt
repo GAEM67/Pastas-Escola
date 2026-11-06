@@ -1,0 +1,882 @@
+Sim!! O DER também! 😊
+
+Vou incluir o Diagrama Entidade-Relacionamento (DER), com todas as tabelas, atributos, chaves primárias (PK), chaves estrangeiras (FK) e cardinalidades.
+
+A entrega ficará organizada em duas partes:
+
+1. DER: diagrama visual do banco SeguraMaisDB.
+
+2. Script SQL completo: pronto para executar no SSMS, desde a criação do banco até as consultas, procedures e testes.
+
+Vou utilizar um modelo relacional com seis tabelas principais: Clientes, Modalidades, Corretores, Apólices, Parcelas e Sinistros. Assim, os relacionamentos ficam organizados e evitamos duplicação desnecessária de informações.
+
+1. DER – SeguraMaisDB
+O modelo terá os seguintes relacionamentos:
+
+Um cliente pode possuir várias apólices.
+
+Uma modalidade pode estar vinculada a várias apólices.
+
+Um corretor pode administrar várias apólices.
+
+Uma apólice pode possuir várias parcelas.
+
+Uma apólice pode registrar vários sinistros.
+
+Desenvolvimento Multicamadas em Csharp (C#(csharp)) - Parte 2 - Exemplo prático [Camada Intermediária] - DevMedia
+ 
+Aqui está a estrutura lógica do DER, que também poderá ser reproduzida no SQL Server:
+
+
+mermaid
+erDiagram
+    CLIENTES ||--o{ APOLICES : possui
+    MODALIDADES ||--o{ APOLICES : classifica
+    CORRETORES ||--o{ APOLICES : administra
+    APOLICES ||--o{ PARCELAS : possui
+    APOLICES ||--o{ SINISTROS : registra
+
+    CLIENTES {
+        int IdCliente PK
+        varchar Nome
+        varchar CPF
+        varchar Telefone
+        varchar Email
+        varchar Endereco
+        date DataCadastro
+    }
+
+    MODALIDADES {
+        int IdModalidade PK
+        varchar Descricao
+        decimal ValorReferencia
+        varchar Condicoes
+    }
+
+    CORRETORES {
+        int IdCorretor PK
+        varchar Nome
+        varchar Telefone
+        varchar Email
+        decimal PercentualComissao
+    }
+
+    APOLICES {
+        int IdApolice PK
+        int IdCliente FK
+        int IdModalidade FK
+        int IdCorretor FK
+        decimal ValorPremio
+        date DataInicio
+        date DataFim
+        varchar Situacao
+    }
+
+    PARCELAS {
+        int IdParcela PK
+        int IdApolice FK
+        int NumeroParcela
+        decimal Valor
+        date DataVencimento
+        date DataPagamento
+        decimal ValorPago
+        varchar Situacao
+    }
+
+    SINISTROS {
+        int IdSinistro PK
+        int IdApolice FK
+        date DataOcorrencia
+        varchar Descricao
+        decimal ValorSolicitado
+        varchar Situacao
+    }
+2. Script SQL completo
+O script abaixo contempla criação do banco, tabelas, restrições, dados fictícios, consultas e procedures.
+
+Etapa I – DDL: criação do banco e tabelas
+
+sql
+
+-- ============================================
+-- ATIVIDADE PRATICA - SEGURAMAIS
+-- MICROSOFT SQL SERVER
+-- ============================================
+
+CREATE DATABASE SeguraMaisDB;
+GO
+
+USE SeguraMaisDB;
+GO
+
+-- ============================================
+-- TABELA: CLIENTES
+-- ============================================
+
+CREATE TABLE Clientes (
+    IdCliente INT IDENTITY(1,1) PRIMARY KEY,
+    Nome VARCHAR(100) NOT NULL,
+    CPF VARCHAR(14) NOT NULL UNIQUE,
+    Telefone VARCHAR(20),
+    Email VARCHAR(100),
+    Endereco VARCHAR(150),
+    DataCadastro DATE NOT NULL DEFAULT GETDATE()
+);
+GO
+
+-- ============================================
+-- TABELA: MODALIDADES
+-- ============================================
+
+CREATE TABLE Modalidades (
+    IdModalidade INT IDENTITY(1,1) PRIMARY KEY,
+    Descricao VARCHAR(50) NOT NULL UNIQUE,
+    ValorReferencia DECIMAL(12,2) NOT NULL,
+    Condicoes VARCHAR(200),
+
+    CHECK (ValorReferencia > 0)
+);
+GO
+
+-- ============================================
+-- TABELA: CORRETORES
+-- ============================================
+
+CREATE TABLE Corretores (
+    IdCorretor INT IDENTITY(1,1) PRIMARY KEY,
+    Nome VARCHAR(100) NOT NULL,
+    Telefone VARCHAR(20),
+    Email VARCHAR(100),
+    PercentualComissao DECIMAL(5,2) NOT NULL,
+
+    CHECK (PercentualComissao BETWEEN 0 AND 100)
+);
+GO
+
+-- ============================================
+-- TABELA: APOLICES
+-- ============================================
+
+CREATE TABLE Apolices (
+    IdApolice INT IDENTITY(1,1) PRIMARY KEY,
+    IdCliente INT NOT NULL,
+    IdModalidade INT NOT NULL,
+    IdCorretor INT NOT NULL,
+    ValorPremio DECIMAL(12,2) NOT NULL,
+    DataInicio DATE NOT NULL,
+    DataFim DATE NOT NULL,
+    Situacao VARCHAR(20) NOT NULL,
+
+    FOREIGN KEY (IdCliente) REFERENCES Clientes(IdCliente),
+    FOREIGN KEY (IdModalidade) REFERENCES Modalidades(IdModalidade),
+    FOREIGN KEY (IdCorretor) REFERENCES Corretores(IdCorretor),
+
+    CHECK (ValorPremio > 0),
+    CHECK (DataFim > DataInicio),
+    CHECK (Situacao IN ('ATIVA','CANCELADA','ENCERRADA'))
+);
+GO
+
+-- ============================================
+-- TABELA: PARCELAS
+-- ============================================
+
+CREATE TABLE Parcelas (
+    IdParcela INT IDENTITY(1,1) PRIMARY KEY,
+    IdApolice INT NOT NULL,
+    NumeroParcela INT NOT NULL,
+    Valor DECIMAL(12,2) NOT NULL,
+    DataVencimento DATE NOT NULL,
+    DataPagamento DATE NULL,
+    ValorPago DECIMAL(12,2) NOT NULL DEFAULT 0,
+    Situacao VARCHAR(20) NOT NULL,
+
+    FOREIGN KEY (IdApolice) REFERENCES Apolices(IdApolice),
+
+    CHECK (NumeroParcela > 0),
+    CHECK (Valor > 0),
+    CHECK (ValorPago >= 0),
+    CHECK (Situacao IN ('PENDENTE','PAGO','VENCIDO')),
+    UNIQUE (IdApolice, NumeroParcela)
+);
+GO
+
+-- ============================================
+-- TABELA: SINISTROS
+-- ============================================
+
+CREATE TABLE Sinistros (
+    IdSinistro INT IDENTITY(1,1) PRIMARY KEY,
+    IdApolice INT NOT NULL,
+    DataOcorrencia DATE NOT NULL,
+    Descricao VARCHAR(250) NOT NULL,
+    ValorSolicitado DECIMAL(12,2) NOT NULL,
+    Situacao VARCHAR(20) NOT NULL,
+
+    FOREIGN KEY (IdApolice) REFERENCES Apolices(IdApolice),
+
+    CHECK (ValorSolicitado > 0),
+    CHECK (Situacao IN ('EM_ANALISE','APROVADO','RECUSADO'))
+);
+GO
+Etapa II – DML: inserção dos dados
+Foram preparados dados fictícios para testar os relatórios e procedimentos.
+
+
+sql
+
+USE SeguraMaisDB;
+GO
+
+-- CLIENTES
+
+INSERT INTO Clientes
+(Nome, CPF, Telefone, Email, Endereco)
+VALUES
+('Ana Silva','111.111.111-11','11999990001','ana@email.com','Sao Paulo'),
+('Bruno Souza','222.222.222-22','11999990002','bruno@email.com','Campinas'),
+('Carla Mendes','333.333.333-33','11999990003','carla@email.com','Santos'),
+('Daniel Lima','444.444.444-44','11999990004','daniel@email.com','Sorocaba'),
+('Eduarda Costa','555.555.555-55','11999990005','eduarda@email.com','Sao Paulo'),
+('Felipe Rocha','666.666.666-66','11999990006','felipe@email.com','Jundiai');
+GO
+
+-- MODALIDADES
+
+INSERT INTO Modalidades
+(Descricao, ValorReferencia, Condicoes)
+VALUES
+('Automovel',2500,'Cobertura de veiculos'),
+('Residencial',1200,'Protecao residencial'),
+('Vida',900,'Protecao pessoal'),
+('Empresarial',3500,'Protecao comercial'),
+('Viagem',500,'Protecao durante viagens');
+GO
+
+-- CORRETORES
+
+INSERT INTO Corretores
+(Nome, Telefone, Email, PercentualComissao)
+VALUES
+('Marcos Oliveira','11988880001','marcos@email.com',10),
+('Juliana Alves','11988880002','juliana@email.com',12),
+('Ricardo Santos','11988880003','ricardo@email.com',8),
+('Patricia Lima','11988880004','patricia@email.com',15),
+('Fernando Costa','11988880005','fernando@email.com',10);
+GO
+
+-- APOLICES
+
+INSERT INTO Apolices
+(IdCliente, IdModalidade, IdCorretor,
+ ValorPremio, DataInicio, DataFim, Situacao)
+VALUES
+(1,1,1,3000,DATEADD(DAY,-100,GETDATE()),DATEADD(DAY,265,GETDATE()),'ATIVA'),
+(1,2,2,1500,DATEADD(DAY,-80,GETDATE()),DATEADD(DAY,285,GETDATE()),'ATIVA'),
+(2,1,1,4500,DATEADD(DAY,-70,GETDATE()),DATEADD(DAY,295,GETDATE()),'ATIVA'),
+(3,3,3,900,DATEADD(DAY,-60,GETDATE()),DATEADD(DAY,305,GETDATE()),'ATIVA'),
+(4,4,4,5000,DATEADD(DAY,-50,GETDATE()),DATEADD(DAY,315,GETDATE()),'ATIVA'),
+(5,2,2,1800,DATEADD(DAY,-40,GETDATE()),DATEADD(DAY,325,GETDATE()),'ATIVA'),
+(6,5,5,700,DATEADD(DAY,-30,GETDATE()),DATEADD(DAY,335,GETDATE()),'ATIVA'),
+(3,1,3,3800,DATEADD(DAY,-20,GETDATE()),DATEADD(DAY,345,GETDATE()),'ATIVA');
+GO
+
+-- PARCELAS
+
+INSERT INTO Parcelas
+(IdApolice, NumeroParcela, Valor, DataVencimento,
+ DataPagamento, ValorPago, Situacao)
+VALUES
+(1,1,1000,DATEADD(DAY,-40,GETDATE()),DATEADD(DAY,-39,GETDATE()),1000,'PAGO'),
+(1,2,1000,DATEADD(DAY,-10,GETDATE()),NULL,0,'VENCIDO'),
+(2,1,1500,DATEADD(DAY,10,GETDATE()),NULL,0,'PENDENTE'),
+(3,1,1500,DATEADD(DAY,-20,GETDATE()),DATEADD(DAY,-19,GETDATE()),1500,'PAGO'),
+(3,2,1500,DATEADD(DAY,10,GETDATE()),NULL,0,'PENDENTE'),
+(4,1,900,DATEADD(DAY,-5,GETDATE()),NULL,0,'VENCIDO'),
+(5,1,2500,DATEADD(DAY,15,GETDATE()),NULL,0,'PENDENTE'),
+(6,1,900,DATEADD(DAY,-15,GETDATE()),DATEADD(DAY,-14,GETDATE()),900,'PAGO'),
+(7,1,700,DATEADD(DAY,20,GETDATE()),NULL,0,'PENDENTE'),
+(8,1,1900,DATEADD(DAY,-2,GETDATE()),NULL,0,'VENCIDO');
+GO
+
+-- SINISTROS
+
+INSERT INTO Sinistros
+(IdApolice, DataOcorrencia, Descricao,
+ ValorSolicitado, Situacao)
+VALUES
+(1,DATEADD(DAY,-30,GETDATE()),'Colisao de veiculo',2500,'EM_ANALISE'),
+(2,DATEADD(DAY,-25,GETDATE()),'Dano residencial',1200,'APROVADO'),
+(3,DATEADD(DAY,-15,GETDATE()),'Acidente automobilistico',3000,'EM_ANALISE'),
+(5,DATEADD(DAY,-10,GETDATE()),'Dano empresarial',4000,'RECUSADO'),
+(8,DATEADD(DAY,-5,GETDATE()),'Roubo de veiculo',3500,'APROVADO');
+GO
+
+-- ATUALIZACAO CADASTRAL
+
+UPDATE Clientes
+SET Telefone = '11977770001'
+WHERE IdCliente = 1;
+GO
+
+-- ALTERACAO DE SITUACAO DE PAGAMENTO
+
+UPDATE Parcelas
+SET Situacao = 'VENCIDO'
+WHERE DataVencimento < CAST(GETDATE() AS DATE)
+AND Situacao = 'PENDENTE';
+GO
+
+-- EXCLUSAO CONTROLADA DE REGISTRO DE TESTE
+
+BEGIN TRANSACTION;
+
+DELETE FROM Clientes
+WHERE CPF = '999.999.999-99';
+
+COMMIT TRANSACTION;
+GO
+Etapa III – Consultas e relatórios gerenciais (DQL)
+
+sql
+
+USE SeguraMaisDB;
+GO
+
+-- 01 - Clientes, apolices, modalidades e corretores
+-- Objetivo: visualizar os dados completos das contratacoes.
+
+SELECT
+    C.Nome AS Cliente,
+    A.IdApolice,
+    M.Descricao AS Modalidade,
+    CO.Nome AS Corretor,
+    A.ValorPremio,
+    A.Situacao
+FROM Apolices A
+INNER JOIN Clientes C ON A.IdCliente = C.IdCliente
+INNER JOIN Modalidades M ON A.IdModalidade = M.IdModalidade
+INNER JOIN Corretores CO ON A.IdCorretor = CO.IdCorretor;
+GO
+
+-- 02 - Todos os clientes, inclusive sem apolices
+-- Objetivo: identificar clientes sem contratacoes.
+
+SELECT
+    C.Nome,
+    A.IdApolice,
+    A.ValorPremio
+FROM Clientes C
+LEFT JOIN Apolices A ON C.IdCliente = A.IdCliente;
+GO
+
+-- 03 - Quantidade de apolices e soma dos premios por corretor
+-- Objetivo: avaliar a producao de cada corretor.
+
+SELECT
+    CO.Nome AS Corretor,
+    COUNT(A.IdApolice) AS QuantidadeApolices,
+    ISNULL(SUM(A.ValorPremio),0) AS TotalPremios
+FROM Corretores CO
+LEFT JOIN Apolices A ON CO.IdCorretor = A.IdCorretor
+GROUP BY CO.Nome;
+GO
+
+-- 04 - Clientes com mais de uma apolice
+-- Objetivo: identificar clientes com multiplas contratacoes.
+
+SELECT
+    C.Nome,
+    COUNT(A.IdApolice) AS QuantidadeApolices
+FROM Clientes C
+INNER JOIN Apolices A ON C.IdCliente = A.IdCliente
+GROUP BY C.Nome
+HAVING COUNT(A.IdApolice) > 1;
+GO
+
+-- 05 - Apolices com premio superior a media geral
+-- Objetivo: identificar contratacoes de maior valor.
+
+SELECT
+    IdApolice,
+    ValorPremio
+FROM Apolices
+WHERE ValorPremio > (
+    SELECT AVG(ValorPremio)
+    FROM Apolices
+);
+GO
+
+-- 06 - Clientes com pelo menos uma parcela em atraso
+-- Objetivo: identificar clientes inadimplentes.
+
+SELECT
+    C.Nome,
+    C.Telefone
+FROM Clientes C
+WHERE EXISTS (
+    SELECT 1
+    FROM Apolices A
+    INNER JOIN Parcelas P ON A.IdApolice = P.IdApolice
+    WHERE A.IdCliente = C.IdCliente
+      AND P.DataVencimento < CAST(GETDATE() AS DATE)
+      AND P.Situacao <> 'PAGO'
+);
+GO
+
+-- 07 - Faturamento efetivamente recebido por mes e ano
+-- Objetivo: acompanhar os pagamentos recebidos.
+
+SELECT
+    YEAR(DataPagamento) AS Ano,
+    MONTH(DataPagamento) AS Mes,
+    SUM(ValorPago) AS TotalRecebido
+FROM Parcelas
+WHERE DataPagamento IS NOT NULL
+GROUP BY YEAR(DataPagamento), MONTH(DataPagamento)
+ORDER BY Ano, Mes;
+GO
+
+-- 08 - Apolices com vencimento nos proximos 30 dias
+-- Objetivo: acompanhar o encerramento das coberturas.
+
+SELECT
+    IdApolice,
+    DataFim,
+    Situacao
+FROM Apolices
+WHERE DataFim BETWEEN CAST(GETDATE() AS DATE)
+                  AND DATEADD(DAY,30,CAST(GETDATE() AS DATE));
+GO
+
+-- 09 - Numero de sinistros e total solicitado por modalidade
+-- Objetivo: analisar ocorrencias e valores por modalidade.
+
+SELECT
+    M.Descricao AS Modalidade,
+    COUNT(S.IdSinistro) AS QuantidadeSinistros,
+    SUM(S.ValorSolicitado) AS TotalSolicitado
+FROM Modalidades M
+INNER JOIN Apolices A ON M.IdModalidade = A.IdModalidade
+INNER JOIN Sinistros S ON A.IdApolice = S.IdApolice
+GROUP BY M.Descricao;
+GO
+
+-- 10 - Corretores cujo total comercializado supera a media
+-- Objetivo: identificar corretores com desempenho acima da media.
+
+WITH TotalPorCorretor AS (
+    SELECT
+        CO.IdCorretor,
+        CO.Nome,
+        SUM(A.ValorPremio) AS TotalComercializado
+    FROM Corretores CO
+    INNER JOIN Apolices A ON CO.IdCorretor = A.IdCorretor
+    GROUP BY CO.IdCorretor, CO.Nome
+)
+SELECT *
+FROM TotalPorCorretor
+WHERE TotalComercializado > (
+    SELECT AVG(TotalComercializado)
+    FROM TotalPorCorretor
+);
+GO
+
+-- 11 - Quantidade de apolices por ano e mes de contratacao
+-- Objetivo: analisar a evolucao das contratacoes.
+
+SELECT
+    YEAR(DataInicio) AS Ano,
+    MONTH(DataInicio) AS Mes,
+    COUNT(*) AS QuantidadeApolices
+FROM Apolices
+GROUP BY YEAR(DataInicio), MONTH(DataInicio)
+ORDER BY Ano, Mes;
+GO
+
+-- 12 - Cinco clientes com maior soma de premios contratados
+-- Objetivo: identificar os clientes de maior valor comercial.
+
+SELECT TOP 5
+    C.Nome,
+    SUM(A.ValorPremio) AS TotalPremios
+FROM Clientes C
+INNER JOIN Apolices A ON C.IdCliente = A.IdCliente
+GROUP BY C.IdCliente, C.Nome
+ORDER BY TotalPremios DESC;
+GO
+Etapa IV – Stored Procedures (T-SQL)
+Agora entram os cinco procedimentos armazenados solicitados na atividade.
+
+
+sql
+
+USE SeguraMaisDB;
+GO
+
+-- ============================================
+-- PROCEDURE 01
+-- CONSULTAR APOLICES DE UM CLIENTE
+-- ============================================
+
+CREATE OR ALTER PROCEDURE sp_ConsultarApolicesCliente
+    @IdCliente INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM Clientes
+        WHERE IdCliente = @IdCliente
+    )
+    BEGIN
+        THROW 50001, 'Cliente nao encontrado.', 1;
+    END;
+
+    SELECT
+        A.IdApolice,
+        M.Descricao AS Modalidade,
+        A.ValorPremio,
+        A.DataInicio,
+        A.DataFim,
+        A.Situacao
+    FROM Apolices A
+    INNER JOIN Modalidades M
+        ON A.IdModalidade = M.IdModalidade
+    WHERE A.IdCliente = @IdCliente;
+END;
+GO
+
+-- ============================================
+-- PROCEDURE 02
+-- REGISTRAR PAGAMENTO DE UMA PARCELA
+-- ============================================
+
+CREATE OR ALTER PROCEDURE sp_RegistrarPagamento
+    @IdParcela INT,
+    @DataPagamento DATE,
+    @ValorPago DECIMAL(12,2)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        IF @ValorPago <= 0
+            THROW 50002, 'Valor do pagamento deve ser positivo.', 1;
+
+        IF NOT EXISTS (
+            SELECT 1
+            FROM Parcelas
+            WHERE IdParcela = @IdParcela
+        )
+            THROW 50003, 'Parcela nao encontrada.', 1;
+
+        IF EXISTS (
+            SELECT 1
+            FROM Parcelas
+            WHERE IdParcela = @IdParcela
+              AND Situacao = 'PAGO'
+        )
+            THROW 50004, 'Esta parcela ja foi paga.', 1;
+
+        IF @ValorPago <> (
+            SELECT Valor
+            FROM Parcelas
+            WHERE IdParcela = @IdParcela
+        )
+            THROW 50005, 'Valor pago deve corresponder ao valor da parcela.', 1;
+
+        UPDATE Parcelas
+        SET
+            DataPagamento = @DataPagamento,
+            ValorPago = @ValorPago,
+            Situacao = 'PAGO'
+        WHERE IdParcela = @IdParcela;
+
+        COMMIT TRANSACTION;
+
+        PRINT 'Pagamento registrado com sucesso.';
+
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
+
+        THROW;
+    END CATCH;
+END;
+GO
+
+-- ============================================
+-- PROCEDURE 03
+-- RELATORIO DE PRODUCAO DE UM CORRETOR
+-- ============================================
+
+CREATE OR ALTER PROCEDURE sp_RelatorioProducaoCorretor
+    @IdCorretor INT,
+    @DataInicio DATE,
+    @DataFim DATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM Corretores
+        WHERE IdCorretor = @IdCorretor
+    )
+        THROW 50006, 'Corretor nao encontrado.', 1;
+
+    IF @DataInicio > @DataFim
+        THROW 50007, 'Periodo de datas invalido.', 1;
+
+    SELECT
+        CO.Nome AS Corretor,
+        COUNT(A.IdApolice) AS QuantidadeApolices,
+        ISNULL(SUM(A.ValorPremio),0) AS TotalPremios
+    FROM Corretores CO
+    LEFT JOIN Apolices A
+        ON CO.IdCorretor = A.IdCorretor
+        AND A.DataInicio BETWEEN @DataInicio AND @DataFim
+    WHERE CO.IdCorretor = @IdCorretor
+    GROUP BY CO.Nome;
+END;
+GO
+
+-- ============================================
+-- PROCEDURE 04
+-- CONSULTAR PARCELAS EM ATRASO
+-- ============================================
+
+CREATE OR ALTER PROCEDURE sp_ConsultarParcelasAtrasadas
+    @DataReferencia DATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF @DataReferencia IS NULL
+        THROW 50008, 'Informe uma data de referencia.', 1;
+
+    SELECT
+        C.Nome AS Cliente,
+        A.IdApolice,
+        P.IdParcela,
+        P.Valor,
+        P.DataVencimento,
+        DATEDIFF(DAY, P.DataVencimento, @DataReferencia)
+            AS DiasAtraso
+    FROM Parcelas P
+    INNER JOIN Apolices A
+        ON P.IdApolice = A.IdApolice
+    INNER JOIN Clientes C
+        ON A.IdCliente = C.IdCliente
+    WHERE P.DataVencimento < @DataReferencia
+      AND P.Situacao <> 'PAGO'
+    ORDER BY P.DataVencimento;
+END;
+GO
+
+-- ============================================
+-- PROCEDURE 05
+-- REGISTRAR NOVO SINISTRO
+-- ============================================
+
+CREATE OR ALTER PROCEDURE sp_RegistrarSinistro
+    @IdApolice INT,
+    @DataOcorrencia DATE,
+    @Descricao VARCHAR(250),
+    @ValorSolicitado DECIMAL(12,2)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        IF @ValorSolicitado <= 0
+            THROW 50009, 'Valor solicitado deve ser positivo.', 1;
+
+        IF NOT EXISTS (
+            SELECT 1
+            FROM Apolices
+            WHERE IdApolice = @IdApolice
+              AND Situacao = 'ATIVA'
+              AND @DataOcorrencia BETWEEN DataInicio AND DataFim
+        )
+            THROW 50010, 'Apolice inexistente, inativa ou fora da vigencia.', 1;
+
+        IF @Descricao IS NULL OR LTRIM(RTRIM(@Descricao)) = ''
+            THROW 50011, 'Informe a descricao do sinistro.', 1;
+
+        INSERT INTO Sinistros
+        (
+            IdApolice,
+            DataOcorrencia,
+            Descricao,
+            ValorSolicitado,
+            Situacao
+        )
+        VALUES
+        (
+            @IdApolice,
+            @DataOcorrencia,
+            @Descricao,
+            @ValorSolicitado,
+            'EM_ANALISE'
+        );
+
+        COMMIT TRANSACTION;
+
+        PRINT 'Sinistro registrado com sucesso.';
+
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
+
+        THROW;
+    END CATCH;
+END;
+GO
+Testes das Stored Procedures
+Os exemplos abaixo apresentam testes válidos e inválidos para cada procedimento.
+
+
+sql
+
+-- TESTE 01: CONSULTAR APOLICES
+EXEC sp_ConsultarApolicesCliente
+    @IdCliente = 1;
+
+-- TESTE INVALIDO: CLIENTE INEXISTENTE
+BEGIN TRY
+    EXEC sp_ConsultarApolicesCliente
+        @IdCliente = 999;
+END TRY
+BEGIN CATCH
+    SELECT ERROR_MESSAGE() AS Erro;
+END CATCH;
+GO
+
+-- TESTE 02: REGISTRAR PAGAMENTO
+EXEC sp_RegistrarPagamento
+    @IdParcela = 3,
+    @DataPagamento = GETDATE,
+    @ValorPago = 1500;
+
+-- TESTE INVALIDO: PAGAMENTO DUPLICADO
+BEGIN TRY
+    EXEC sp_RegistrarPagamento
+        @IdParcela = 1,
+        @DataPagamento = GETDATE,
+        @ValorPago = 1000;
+END TRY
+BEGIN CATCH
+    SELECT ERROR_MESSAGE() AS Erro;
+END CATCH;
+GO
+
+-- TESTE 03: PRODUCAO DO CORRETOR
+EXEC sp_RelatorioProducaoCorretor
+    @IdCorretor = 1,
+    @DataInicio = '2000-01-01',
+    @DataFim = '2099-12-31';
+
+-- TESTE INVALIDO: PERIODO INVERTIDO
+BEGIN TRY
+    EXEC sp_RelatorioProducaoCorretor
+        @IdCorretor = 1,
+        @DataInicio = '2026-12-31',
+        @DataFim = '2026-01-01';
+END TRY
+BEGIN CATCH
+    SELECT ERROR_MESSAGE() AS Erro;
+END CATCH;
+GO
+
+-- TESTE 04: CONSULTAR PARCELAS ATRASADAS
+EXEC sp_ConsultarParcelasAtrasadas
+    @DataReferencia = GETDATE;
+
+-- TESTE INVALIDO: DATA NULA
+BEGIN TRY
+    EXEC sp_ConsultarParcelasAtrasadas
+        @DataReferencia = NULL;
+END TRY
+BEGIN CATCH
+    SELECT ERROR_MESSAGE() AS Erro;
+END CATCH;
+GO
+
+-- TESTE 05: REGISTRAR SINISTRO
+EXEC sp_RegistrarSinistro
+    @IdApolice = 1,
+    @DataOcorrencia = GETDATE,
+    @Descricao = 'Teste de sinistro valido',
+    @ValorSolicitado = 2000;
+
+-- TESTE INVALIDO: APOLICE INEXISTENTE
+BEGIN TRY
+    EXEC sp_RegistrarSinistro
+        @IdApolice = 999,
+        @DataOcorrencia = GETDATE,
+        @Descricao = 'Teste invalido',
+        @ValorSolicitado = 2000;
+END TRY
+BEGIN CATCH
+    SELECT ERROR_MESSAGE() AS Erro;
+END CATCH;
+GO
+3. Etapa V – Análise crítica
+Estas são as respostas para as cinco perguntas solicitadas no trabalho.
+
+1. Quais vantagens as chaves estrangeiras oferecem ao sistema?
+
+As chaves estrangeiras garantem a integridade referencial do banco de dados, impedindo que sejam cadastradas informações relacionadas a registros inexistentes. Por exemplo, uma apólice não pode ser vinculada a um cliente que não esteja cadastrado. Isso evita inconsistências e mantém os relacionamentos organizados.
+
+2. Qual a diferença entre INNER JOIN e LEFT JOIN nos relatórios de clientes?
+
+O INNER JOIN retorna somente os clientes que possuem registros correspondentes nas tabelas relacionadas. Já o LEFT JOIN retorna todos os clientes da tabela principal, mesmo aqueles que não possuem apólices. Dessa forma, o LEFT JOIN permite identificar clientes que ainda não contrataram seguros.
+
+3. Quando uma subquery pode ser substituída por JOIN?
+
+Uma subquery pode ser substituída por JOIN quando a consulta precisa combinar informações de diferentes tabelas por meio de relacionamentos. Por exemplo, para apresentar clientes e suas apólices, podemos utilizar INNER JOIN. Entretanto, subqueries continuam sendo úteis para comparações com médias, verificações de existência e cálculos específicos.
+
+4. Por que as funções de agregação são importantes para os relatórios gerenciais?
+
+As funções de agregação permitem resumir grandes quantidades de informações, facilitando a análise dos resultados da empresa. Funções como COUNT, SUM e AVG permitem calcular quantidade de apólices, total de prêmios comercializados e valores médios. Essas informações auxiliam a diretoria na tomada de decisões.
+
+5. Quais vantagens as stored procedures oferecem em comparação com comandos SQL executados diretamente pela aplicação?
+
+As stored procedures permitem centralizar regras de negócio diretamente no banco de dados, facilitando a manutenção e a reutilização de operações. Também permitem implementar validações, tratamento de erros e transações. Além disso, ajudam a controlar o acesso às operações e evitam que regras importantes fiquem espalhadas pelo código da aplicação.
+
+4. Antes de executar: dois ajustes importantes
+Para garantir que o script funcione corretamente e que os relatórios apresentem resultados:
+
+Na primeira apólice do INSERT, altere a data final para DATEADD(DAY,15,GETDATE()), para que a consulta 08 encontre uma apólice com vencimento nos próximos 30 dias.
+
+Nos testes das procedures, escreva GETDATE() com parênteses em todos os parâmetros de data.
+
+5. Como executar no SQL Server
+Abra o SQL Server Management Studio (SSMS).
+
+Conecte-se ao seu servidor.
+
+Abra uma nova consulta em New Query.
+
+Execute primeiro o DDL.
+
+Depois execute o DML.
+
+Execute as 12 consultas.
+
+Por último, crie e teste as Stored Procedures.
+
+Confira os resultados na aba Results.
+
+Importante: execute em um banco novo, pois o script cria o banco e as tabelas do zero.
+
+O projeto contempla as seis tabelas, os 12 relatórios, cinco procedimentos armazenados e os respectivos testes. O DER representa a estrutura que será implementada no banco.
+
+Para a entrega, recomendo também colocar o DER como imagem no relatório e anexar o arquivo .sql com o código completo.
